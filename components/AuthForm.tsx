@@ -28,6 +28,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { signIn, signUp } from '@/lib/actions/user.actions';
 import PlaidLink from './PlaidLink';
+import ForgotPasswordModal from './ForgotPasswordModal';
 
 const AuthForm = ({ type }: { type: string }) => {
   const router = useRouter();
@@ -35,6 +36,7 @@ const AuthForm = ({ type }: { type: string }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const formSchema = authFormSchema(type);
 
@@ -334,9 +336,13 @@ const AuthForm = ({ type }: { type: string }) => {
                   />
                   <span className="text-13 text-gray-600">Remember this device</span>
                 </label>
-                <span className="text-13 font-medium text-blue-600 hover:text-blue-700 cursor-pointer">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-13 font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                >
                   Forgot password?
-                </span>
+                </button>
               </div>
             )}
 
@@ -389,6 +395,13 @@ const AuthForm = ({ type }: { type: string }) => {
           </Link>
         </footer>
       )}
+
+      {/* Password Reset Modal */}
+      <ForgotPasswordModal
+        isOpen={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+        defaultEmail={form.getValues('email')}
+      />
     </section>
   );
 };

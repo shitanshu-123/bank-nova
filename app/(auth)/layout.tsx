@@ -65,11 +65,11 @@ export default function RootLayout({
             <div className="mt-5 grid grid-cols-2 gap-3 pt-4 border-t border-white/10">
               <div>
                 <span className="text-11 text-blue-200 uppercase tracking-wider">Connected Banks</span>
-                <p className="text-14 font-semibold text-white">Chase • BoA • Wells</p>
+                <p className="text-14 font-semibold text-white">HDFC • SBI • ICICI • Axis</p>
               </div>
               <div>
                 <span className="text-11 text-blue-200 uppercase tracking-wider">Instant Transfer</span>
-                <p className="text-14 font-semibold text-white">Enabled (Dwolla)</p>
+                <p className="text-14 font-semibold text-white">Instant (UPI & GPay)</p>
               </div>
             </div>
           </div>
@@ -113,7 +113,7 @@ export default function RootLayout({
 
           <div className="flex items-center gap-1 text-emerald-300 font-semibold text-12">
             <CheckCircle2 size={15} />
-            <span>Plaid & Dwolla Certified</span>
+            <span>UPI & NPCI Certified</span>
           </div>
         </div>
       </div>

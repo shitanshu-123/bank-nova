@@ -254,7 +254,7 @@ const PaymentTransferForm = ({ accounts }: PaymentTransferFormProps) => {
             <FormItem className="border-y border-gray-200">
               <div className="payment-transfer_form-item py-5">
                 <FormLabel className="text-14 w-full max-w-[280px] font-medium text-gray-700">
-                  Amount
+                  Amount (in ₹)
                 </FormLabel>
                 <div className="flex w-full flex-col">
                   <FormControl>

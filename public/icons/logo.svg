@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" fill="none">
+  <defs>
+    <linearGradient id="nova-grad-primary" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0F52BA"/>
+      <stop offset="50%" stop-color="#1677FF"/>
+      <stop offset="100%" stop-color="#00D2FF"/>
+    </linearGradient>
+    <linearGradient id="nova-accent" x1="8" y1="8" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#E0F2FE"/>
+    </linearGradient>
+  </defs>
+  <rect width="36" height="36" rx="9" fill="url(#nova-grad-primary)"/>
+  <path d="M10 25.5V10.5H14L21.2 20.2V10.5H25.2V25.5H21.2L14 15.8V25.5H10Z" fill="url(#nova-accent)"/>
+  <path d="M26.5 5.5L27.3 7.7L29.5 8.5L27.3 9.3L26.5 11.5L25.7 9.3L23.5 8.5L25.7 7.7L26.5 5.5Z" fill="#38BDF8"/>
+</svg>

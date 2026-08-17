@@ -26,9 +26,10 @@ import {
   Hash,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { signIn, signUp } from '@/lib/actions/user.actions';
+import { signIn, signUp, sendEmailOtpVerification } from '@/lib/actions/user.actions';
 import PlaidLink from './PlaidLink';
 import ForgotPasswordModal from './ForgotPasswordModal';
+import EmailOtpModal from './EmailOtpModal';
 
 const AuthForm = ({ type }: { type: string }) => {
   const router = useRouter();
@@ -37,6 +38,11 @@ const AuthForm = ({ type }: { type: string }) => {
   const [errorMessage, setErrorMessage] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+
+  // Email OTP Verification State
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [pendingUserData, setPendingUserData] = useState<any>(null);
+  const [demoOtp, setDemoOtp] = useState('');
 
   const formSchema = authFormSchema(type);
 
@@ -61,6 +67,42 @@ const AuthForm = ({ type }: { type: string }) => {
     },
   });
 
+  // Handle successful OTP verification to finalize sign up
+  const handleOtpVerified = async () => {
+    if (!pendingUserData) return;
+    setIsLoading(true);
+    setErrorMessage('');
+
+    try {
+      const newUser = await signUp(pendingUserData);
+
+      if (newUser?.error) {
+        setErrorMessage(newUser.error);
+        setShowOtpModal(false);
+      } else if (newUser) {
+        setUser(newUser);
+        setShowOtpModal(false);
+      }
+    } catch (err: any) {
+      console.error(err);
+      setErrorMessage('Account creation failed after verification. Please try again.');
+      setShowOtpModal(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle resending OTP code
+  const handleResendOtp = async () => {
+    const targetEmail = pendingUserData?.email || form.getValues('email');
+    if (targetEmail) {
+      const res = await sendEmailOtpVerification(targetEmail);
+      if (res?.otp) {
+        setDemoOtp(res.otp);
+      }
+    }
+  };
+
   // 2. Define a submit handler.
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     setIsLoading(true);
@@ -81,13 +123,17 @@ const AuthForm = ({ type }: { type: string }) => {
           password: data.password,
         };
 
-        const newUser = await signUp(userData);
+        setPendingUserData(userData);
 
-        if (newUser?.error) {
-          setErrorMessage(newUser.error);
-        } else if (newUser) {
-          setUser(newUser);
+        // Send Email OTP
+        const otpRes = await sendEmailOtpVerification(data.email);
+        if (otpRes?.otp) {
+          setDemoOtp(otpRes.otp);
         }
+
+        setShowOtpModal(true);
+        setIsLoading(false);
+        return;
       }
 
       if (type === 'sign-in') {
@@ -401,6 +447,16 @@ const AuthForm = ({ type }: { type: string }) => {
         isOpen={showForgotPassword}
         onClose={() => setShowForgotPassword(false)}
         defaultEmail={form.getValues('email')}
+      />
+
+      {/* Email OTP Verification Modal */}
+      <EmailOtpModal
+        isOpen={showOtpModal}
+        onClose={() => setShowOtpModal(false)}
+        email={pendingUserData?.email || form.getValues('email')}
+        onVerifySuccess={handleOtpVerified}
+        onResendOtp={handleResendOtp}
+        generatedDemoOtp={demoOtp}
       />
     </section>
   );

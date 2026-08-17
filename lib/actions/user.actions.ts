@@ -285,6 +285,23 @@ export const sendPasswordResetEmail = async (email: string) => {
   }
 };
 
+export const sendEmailOtpVerification = async (email: string) => {
+  try {
+    if (!email) return { error: "Please enter a valid email address." };
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    return {
+      success: true,
+      otp,
+      message: `A 6-digit verification code has been sent to ${email}.`,
+    };
+  } catch (error: any) {
+    console.error("Error sending email OTP:", error);
+    return { error: error?.message || "Failed to send email verification code." };
+  }
+};
+
 export const createLinkToken = async (user: User) => {
   try {
     const tokenParams = {

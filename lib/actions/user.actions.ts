@@ -549,3 +549,39 @@ export const getBankByAccountId = async ({ accountId }: getBankByAccountIdProps)
     console.log(error)
   }
 }
+
+export const createIndianBankAccount = async ({
+  userId,
+  bankName,
+  accountNumber,
+  ifscCode,
+}: {
+  userId: string;
+  bankName: string;
+  accountNumber: string;
+  ifscCode: string;
+}) => {
+  try {
+    const { database } = await createAdminClient();
+
+    const bankAccount = await database.createDocument(
+      DATABASE_ID!,
+      BANK_COLLECTION_ID!,
+      ID.unique(),
+      {
+        userId,
+        bankId: ID.unique(),
+        accountId: accountNumber,
+        accessToken: "indian_bank_direct",
+        fundingSourceUrl: "",
+        shareableId: encryptId(accountNumber),
+      }
+    );
+
+    revalidatePath("/");
+    return parseStringify(bankAccount);
+  } catch (error: any) {
+    console.error("Error creating Indian bank account:", error);
+    return { error: error?.message || "Failed to link Indian bank account." };
+  }
+};

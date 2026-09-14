@@ -30,6 +30,8 @@ import { INDIAN_STATES_AND_UTS } from '@/constants/india';
 import PlaidLink from './PlaidLink';
 import ForgotPasswordModal from './ForgotPasswordModal';
 import EmailOtpModal from './EmailOtpModal';
+import IndianBankLinkModal from './IndianBankLinkModal';
+import { Building2 } from 'lucide-react';
 
 const AuthForm = ({ type }: { type: string }) => {
   const router = useRouter();
@@ -38,6 +40,7 @@ const AuthForm = ({ type }: { type: string }) => {
   const [errorMessage, setErrorMessage] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showIndianBankModal, setShowIndianBankModal] = useState(false);
 
   // Email OTP Verification State
   const [showOtpModal, setShowOtpModal] = useState(false);
@@ -246,18 +249,56 @@ const AuthForm = ({ type }: { type: string }) => {
       {/* Main Flow Content */}
       {user ? (
         <div className="flex flex-col gap-5 py-4">
-          <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-5 text-center">
-            <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-blue-600 text-white shadow-md">
+          <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-5 text-center shadow-sm">
+            <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-600 text-white shadow-md">
               <ShieldCheck size={26} />
             </div>
             <h3 className="mt-3 text-16 font-semibold text-gray-900">
               Account Created Successfully
             </h3>
             <p className="mt-1 text-13 text-gray-600">
-              Please link at least one bank account to activate transfers and view real-time balances.
+              Link your Indian bank account or global account to activate transfers and view real-time balances.
             </p>
           </div>
-          <PlaidLink user={user} variant="primary" />
+
+          {/* Primary Action: Instant Indian Bank Connector */}
+          <div className="space-y-3">
+            <Button
+              type="button"
+              onClick={() => setShowIndianBankModal(true)}
+              className="w-full h-12 rounded-2xl bg-emerald-600 hover:bg-emerald-700 font-semibold text-15 text-white shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 group transition-all"
+            >
+              <Building2 size={20} />
+              <span>Link Indian Bank (SBI, HDFC, ICICI, etc.)</span>
+              <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+            </Button>
+
+            <div className="flex items-center gap-2 py-1">
+              <div className="h-px flex-1 bg-gray-200" />
+              <span className="text-11 font-medium uppercase tracking-wider text-gray-400">OR</span>
+              <div className="h-px flex-1 bg-gray-200" />
+            </div>
+
+            {/* Secondary Action: Plaid Link for Global/US Sandbox */}
+            <div className="space-y-1.5">
+              <PlaidLink user={user} variant="primary" />
+              <p className="text-center text-11 text-gray-400">
+                Sandbox mode: enter test phone <span className="font-mono font-semibold text-blue-600">415-555-0011</span>
+              </p>
+            </div>
+
+            {/* Skip Option */}
+            <div className="pt-2 text-center">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => router.push('/')}
+                className="text-13 font-medium text-gray-500 hover:text-gray-900"
+              >
+                Skip & Go to Dashboard →
+              </Button>
+            </div>
+          </div>
         </div>
       ) : (
         <Form {...form}>
@@ -500,6 +541,13 @@ const AuthForm = ({ type }: { type: string }) => {
         email={pendingUserData?.email || form.getValues('email')}
         onVerifySuccess={handleOtpVerified}
         onResendOtp={handleResendOtp}
+      />
+
+      {/* Indian Bank Link Modal */}
+      <IndianBankLinkModal
+        isOpen={showIndianBankModal}
+        onClose={() => setShowIndianBankModal(false)}
+        user={user}
       />
     </section>
   );

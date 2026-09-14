@@ -329,11 +329,16 @@ export const sendEmailOtpVerification = async (email: string, recipientName?: st
       recipientName,
     });
 
+    if (!emailResult.success) {
+      console.error("Email dispatch failure:", emailResult.error);
+      return {
+        error: emailResult.error || "Failed to deliver email. Please check your email address or SMTP credentials.",
+      };
+    }
+
     return {
       success: true,
-      message: emailResult.success
-        ? `A 6-digit verification code has been sent to ${email}.`
-        : `Verification code generated for ${email}.`,
+      message: `A 6-digit verification code has been sent to ${email}.`,
     };
   } catch (error: any) {
     console.error("Error sending email OTP:", error);

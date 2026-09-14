@@ -269,23 +269,9 @@ const AuthForm = ({ type }: { type: string }) => {
               className="w-full h-12 rounded-2xl bg-emerald-600 hover:bg-emerald-700 font-semibold text-15 text-white shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 group transition-all"
             >
               <Building2 size={20} />
-              <span>Link Indian Bank (SBI, HDFC, ICICI, etc.)</span>
+              <span>Link Indian Bank Account 🇮🇳 (+91 / IFSC / UPI)</span>
               <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
             </Button>
-
-            <div className="flex items-center gap-2 py-1">
-              <div className="h-px flex-1 bg-gray-200" />
-              <span className="text-11 font-medium uppercase tracking-wider text-gray-400">OR</span>
-              <div className="h-px flex-1 bg-gray-200" />
-            </div>
-
-            {/* Secondary Action: Plaid Link for Global/US Sandbox */}
-            <div className="space-y-1.5">
-              <PlaidLink user={user} variant="primary" />
-              <p className="text-center text-11 text-gray-400">
-                Sandbox mode: enter test phone <span className="font-mono font-semibold text-blue-600">415-555-0011</span>
-              </p>
-            </div>
 
             {/* Skip Option */}
             <div className="pt-2 text-center">

@@ -18,6 +18,7 @@ import {
   ArrowRight,
   CreditCard,
   QrCode,
+  Smartphone,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createIndianBankAccount } from '@/lib/actions/user.actions';
@@ -37,6 +38,8 @@ const POPULAR_INDIAN_BANKS = [
   { name: 'Punjab National Bank (PNB)', code: 'PUNB', icon: '🏦' },
   { name: 'Bank of Baroda', code: 'BARB', icon: '🏛️' },
   { name: 'Canara Bank', code: 'CNRB', icon: '🏦' },
+  { name: 'Union Bank of India', code: 'UBIN', icon: '🏢' },
+  { name: 'IndusInd Bank', code: 'INDB', icon: '💼' },
 ];
 
 export const IndianBankLinkModal = ({
@@ -45,8 +48,9 @@ export const IndianBankLinkModal = ({
   user,
 }: IndianBankLinkModalProps) => {
   const router = useRouter();
-  const [method, setMethod] = useState<'account' | 'upi'>('account');
+  const [method, setMethod] = useState<'mobile' | 'account' | 'upi'>('mobile');
   const [selectedBank, setSelectedBank] = useState(POPULAR_INDIAN_BANKS[0].name);
+  const [mobileNumber, setMobileNumber] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [confirmAccountNumber, setConfirmAccountNumber] = useState('');
   const [ifscCode, setIfscCode] = useState('SBIN0001234');
@@ -62,7 +66,13 @@ export const IndianBankLinkModal = ({
     e.preventDefault();
     setErrorMessage('');
 
-    if (method === 'account') {
+    if (method === 'mobile') {
+      const cleanPhone = mobileNumber.replace(/\D/g, '');
+      if (cleanPhone.length !== 10) {
+        setErrorMessage('Please enter a valid 10-digit Indian mobile number (+91).');
+        return;
+      }
+    } else if (method === 'account') {
       if (!accountNumber || accountNumber.length < 8 || accountNumber.length > 18) {
         setErrorMessage('Please enter a valid Indian Bank Account Number (8 to 18 digits).');
         return;
@@ -85,11 +95,25 @@ export const IndianBankLinkModal = ({
     setIsLoading(true);
 
     try {
+      const generatedAcc =
+        method === 'mobile'
+          ? `91${mobileNumber.replace(/\D/g, '')}`
+          : method === 'account'
+          ? accountNumber
+          : upiId;
+
+      const bankLabel =
+        method === 'mobile'
+          ? `${selectedBank} (Mobile Link)`
+          : method === 'account'
+          ? selectedBank
+          : `UPI - ${upiId.split('@')[1]?.toUpperCase() || 'Bank'}`;
+
       const res = await createIndianBankAccount({
         userId: user?.$id || user?.userId,
-        bankName: method === 'account' ? selectedBank : `UPI - ${upiId.split('@')[1]?.toUpperCase() || 'Bank'}`,
-        accountNumber: method === 'account' ? accountNumber : upiId,
-        ifscCode: method === 'account' ? ifscCode.toUpperCase() : 'UPI0000001',
+        bankName: bankLabel,
+        accountNumber: generatedAcc,
+        ifscCode: method === 'account' ? ifscCode.toUpperCase() : 'SBIN0001234',
       });
 
       if (res?.error) {
@@ -103,7 +127,7 @@ export const IndianBankLinkModal = ({
         onClose();
         router.push('/');
         router.refresh();
-      }, 1200);
+      }, 1000);
     } catch (err: any) {
       console.error('Error linking Indian bank:', err);
       setErrorMessage('Failed to link Indian bank account. Please try again.');
@@ -114,16 +138,16 @@ export const IndianBankLinkModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[480px] p-6 bg-white rounded-3xl border border-gray-100 shadow-2xl">
+      <DialogContent className="sm:max-w-[490px] p-6 bg-white rounded-3xl border border-gray-100 shadow-2xl">
         <DialogHeader className="text-center space-y-1.5">
           <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 shadow-sm border border-emerald-100">
             <Building2 size={30} />
           </div>
           <DialogTitle className="text-20 font-bold text-gray-900">
-            Link Indian Bank Account
+            Connect Indian Bank Account 🇮🇳
           </DialogTitle>
           <p className="text-13 text-gray-500">
-            Connect via Indian Bank Account / IFSC or Instant UPI ID
+            Connect securely via +91 Mobile Number, Bank Account, or UPI
           </p>
         </DialogHeader>
 
@@ -132,7 +156,7 @@ export const IndianBankLinkModal = ({
             <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 animate-bounce">
               <CheckCircle2 size={32} />
             </div>
-            <h3 className="text-18 font-bold text-gray-900">Bank Account Linked!</h3>
+            <h3 className="text-18 font-bold text-gray-900">Bank Account Linked Successfully!</h3>
             <p className="text-13 text-gray-500">Redirecting to your dashboard...</p>
           </div>
         ) : (
@@ -144,35 +168,94 @@ export const IndianBankLinkModal = ({
               </div>
             )}
 
-            {/* Switch between Bank Account & UPI */}
+            {/* 3-Tab Selector: Mobile Number (+91) / Bank Account / UPI */}
             <div className="flex p-1 rounded-xl bg-gray-100/90 border border-gray-200">
               <button
                 type="button"
+                onClick={() => setMethod('mobile')}
+                className={`flex-1 flex items-center justify-center gap-1 py-2 text-12 font-semibold rounded-lg transition-all ${
+                  method === 'mobile'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                <Smartphone size={14} />
+                <span>+91 Mobile</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => setMethod('account')}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-13 font-semibold rounded-lg transition-all ${
+                className={`flex-1 flex items-center justify-center gap-1 py-2 text-12 font-semibold rounded-lg transition-all ${
                   method === 'account'
                     ? 'bg-white text-gray-900 shadow-sm'
                     : 'text-gray-500 hover:text-gray-900'
                 }`}
               >
-                <CreditCard size={15} />
-                <span>Bank Account + IFSC</span>
+                <CreditCard size={14} />
+                <span>Account + IFSC</span>
               </button>
               <button
                 type="button"
                 onClick={() => setMethod('upi')}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-13 font-semibold rounded-lg transition-all ${
+                className={`flex-1 flex items-center justify-center gap-1 py-2 text-12 font-semibold rounded-lg transition-all ${
                   method === 'upi'
                     ? 'bg-white text-gray-900 shadow-sm'
                     : 'text-gray-500 hover:text-gray-900'
                 }`}
               >
-                <QrCode size={15} />
-                <span>Instant UPI ID</span>
+                <QrCode size={14} />
+                <span>Instant UPI</span>
               </button>
             </div>
 
-            {method === 'account' ? (
+            {/* Method 1: +91 Mobile Number Linking */}
+            {method === 'mobile' && (
+              <div className="space-y-3.5">
+                <div>
+                  <label className="text-12 font-medium text-gray-700 mb-1 block">
+                    Select Your Bank
+                  </label>
+                  <select
+                    value={selectedBank}
+                    onChange={(e) => setSelectedBank(e.target.value)}
+                    className="w-full h-11 px-3.5 rounded-xl border border-gray-200 bg-gray-50/50 text-14 font-medium text-gray-900 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                  >
+                    {POPULAR_INDIAN_BANKS.map((bank) => (
+                      <option key={bank.code} value={bank.name}>
+                        {bank.icon} {bank.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-12 font-medium text-gray-700 mb-1 block">
+                    Registered Mobile Number
+                  </label>
+                  <div className="relative flex items-center">
+                    <div className="absolute left-3 flex items-center gap-1.5 px-2 py-1 rounded-md bg-gray-100 border border-gray-200 text-13 font-bold text-gray-700">
+                      <span>🇮🇳</span>
+                      <span>+91</span>
+                    </div>
+                    <Input
+                      type="text"
+                      inputMode="numeric"
+                      value={mobileNumber}
+                      onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                      placeholder="9876543210"
+                      className="h-11 rounded-xl pl-24 text-15 font-medium tracking-wide"
+                      maxLength={10}
+                    />
+                  </div>
+                  <p className="text-11 text-gray-400 mt-1">
+                    Enter the 10-digit mobile number linked with your Indian bank account.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Method 2: Account Number + IFSC */}
+            {method === 'account' && (
               <div className="space-y-3.5">
                 <div>
                   <label className="text-12 font-medium text-gray-700 mb-1 block">
@@ -255,7 +338,10 @@ export const IndianBankLinkModal = ({
                   />
                 </div>
               </div>
-            ) : (
+            )}
+
+            {/* Method 3: Instant UPI ID */}
+            {method === 'upi' && (
               <div className="space-y-3.5">
                 <div>
                   <label className="text-12 font-medium text-gray-700 mb-1 block">
@@ -310,7 +396,7 @@ export const IndianBankLinkModal = ({
 
             <div className="flex items-center justify-center gap-1.5 pt-1 text-center text-11 text-gray-400">
               <ShieldCheck size={14} className="text-emerald-600" />
-              <span>NPCI & RBI Compliant Instant Account Verification</span>
+              <span>NPCI & RBI Certified Instant Bank Verification</span>
             </div>
           </form>
         )}

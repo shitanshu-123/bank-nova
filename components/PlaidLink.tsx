@@ -1,77 +1,64 @@
-import React, { useCallback, useEffect, useState } from 'react'
-import { Button } from './ui/button'
-import { PlaidLinkOnSuccess, PlaidLinkOptions, usePlaidLink } from 'react-plaid-link'
-import { useRouter } from 'next/navigation';
-import { createLinkToken, exchangePublicToken } from '@/lib/actions/user.actions';
+'use client';
+
+import React, { useState } from 'react';
+import { Button } from './ui/button';
 import Image from 'next/image';
+import IndianBankLinkModal from './IndianBankLinkModal';
 
 const PlaidLink = ({ user, variant }: PlaidLinkProps) => {
-  const router = useRouter();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const [token, setToken] = useState('');
-
-  useEffect(() => {
-    const getLinkToken = async () => {
-      if (!user?.$id) return;
-      const data = await createLinkToken(user);
-
-      if (data?.linkToken) {
-        setToken(data.linkToken);
-      }
-    };
-
-    getLinkToken();
-  }, [user]);
-
-  const onSuccess = useCallback<PlaidLinkOnSuccess>(async (public_token: string) => {
-    await exchangePublicToken({
-      publicToken: public_token,
-      user,
-    })
-
-    router.push('/');
-  }, [user, router])
-  
-  const config: PlaidLinkOptions = {
-    token,
-    onSuccess
-  }
-
-  const { open, ready } = usePlaidLink(config);
-  
   return (
     <>
       {variant === 'primary' ? (
         <Button
-          onClick={() => open()}
-          disabled={!ready}
+          type="button"
+          onClick={() => setIsModalOpen(true)}
           className="plaidlink-primary"
         >
-          Connect bank
+          Connect Indian Bank 🇮🇳
         </Button>
-      ): variant === 'ghost' ? (
-        <Button onClick={() => open()} variant="ghost" className="plaidlink-ghost">
-          <Image 
+      ) : variant === 'ghost' ? (
+        <Button
+          type="button"
+          onClick={() => setIsModalOpen(true)}
+          variant="ghost"
+          className="plaidlink-ghost"
+        >
+          <Image
             src="/icons/connect-bank.svg"
             alt="connect bank"
             width={24}
             height={24}
           />
-          <p className='hidden text-[16px] font-semibold text-black-2 xl:block'>Connect bank</p>
+          <p className="hidden text-[16px] font-semibold text-black-2 xl:block">
+            Connect bank
+          </p>
         </Button>
-      ): (
-        <Button onClick={() => open()} className="plaidlink-default">
-          <Image 
+      ) : (
+        <Button
+          type="button"
+          onClick={() => setIsModalOpen(true)}
+          className="plaidlink-default"
+        >
+          <Image
             src="/icons/connect-bank.svg"
             alt="connect bank"
             width={24}
             height={24}
           />
-          <p className='text-[16px] font-semibold text-black-2'>Connect bank</p>
+          <p className="text-[16px] font-semibold text-black-2">Connect bank</p>
         </Button>
       )}
-    </>
-  )
-}
 
-export default PlaidLink
+      {/* Indian Bank Link Modal (+91 Phone, Account, UPI) */}
+      <IndianBankLinkModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        user={user}
+      />
+    </>
+  );
+};
+
+export default PlaidLink;

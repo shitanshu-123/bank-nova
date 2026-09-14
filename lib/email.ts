@@ -8,15 +8,14 @@ interface SendOtpEmailParams {
 
 export async function sendOtpEmail({ to, otp, recipientName }: SendOtpEmailParams): Promise<{ success: boolean; message: string; error?: string }> {
   try {
-    const smtpUser = process.env.GMAIL_USER || process.env.SMTP_USER || process.env.EMAIL_SERVER_USER;
-    const smtpPass = process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS || process.env.SMTP_PASSWORD || process.env.EMAIL_SERVER_PASSWORD;
+    const smtpUser = (process.env.GMAIL_USER || process.env.SMTP_USER || '').trim();
+    const smtpPass = (process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS || process.env.SMTP_PASSWORD || '').replace(/\s+/g, '');
     const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
     const smtpPort = parseInt(process.env.SMTP_PORT || '465', 10);
-    const smtpSecure = smtpPort === 465;
 
     // Check if email credentials are configured
     if (!smtpUser || !smtpPass) {
-      console.warn('⚠️ SMTP/Gmail credentials not configured in .env. (GMAIL_USER and GMAIL_APP_PASSWORD).');
+      console.warn('⚠️ SMTP/Gmail credentials not configured in .env (GMAIL_USER and GMAIL_APP_PASSWORD).');
       console.log(`[Bank Nova] Real OTP generated for ${to}: ${otp}`);
       return {
         success: true,
@@ -24,15 +23,24 @@ export async function sendOtpEmail({ to, otp, recipientName }: SendOtpEmailParam
       };
     }
 
-    const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: smtpPort,
-      secure: smtpSecure,
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
-      },
-    });
+    // Use Gmail service transport or custom SMTP host
+    const transporter = smtpUser.includes('@gmail.com')
+      ? nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: smtpUser,
+            pass: smtpPass,
+          },
+        })
+      : nodemailer.createTransport({
+          host: smtpHost,
+          port: smtpPort,
+          secure: smtpPort === 465,
+          auth: {
+            user: smtpUser,
+            pass: smtpPass,
+          },
+        });
 
     const displayName = recipientName ? recipientName : 'Valued Customer';
 
@@ -89,13 +97,13 @@ export async function sendOtpEmail({ to, otp, recipientName }: SendOtpEmailParam
 
     await transporter.sendMail({
       from: `"Bank Nova Security" <${smtpUser}>`,
-      to,
+      to: to.trim(),
       subject: `Your Bank Nova Verification Code: ${otp}`,
       text: `Hello ${displayName},\n\nYour 6-digit Bank Nova verification code is: ${otp}\n\nThis code will expire in 10 minutes. If you did not request this code, please ignore this email.\n\nBank Nova Team`,
       html: htmlContent,
     });
 
-    console.log(`[Bank Nova] Verification OTP email successfully sent to ${to}`);
+    console.log(`[Bank Nova] Real OTP email successfully delivered to ${to}`);
     return {
       success: true,
       message: `A 6-digit verification code has been sent to ${to}.`,
@@ -106,6 +114,99 @@ export async function sendOtpEmail({ to, otp, recipientName }: SendOtpEmailParam
       success: false,
       error: error?.message || 'Failed to dispatch email verification code.',
       message: 'Failed to send OTP to email.',
+    };
+  }
+}
+
+export async function sendPasswordResetLinkEmail({ to, resetUrl, recipientName }: { to: string; resetUrl: string; recipientName?: string }): Promise<{ success: boolean; message: string; error?: string }> {
+  try {
+    const smtpUser = (process.env.GMAIL_USER || process.env.SMTP_USER || '').trim();
+    const smtpPass = (process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS || process.env.SMTP_PASSWORD || '').replace(/\s+/g, '');
+    const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
+    const smtpPort = parseInt(process.env.SMTP_PORT || '465', 10);
+
+    if (!smtpUser || !smtpPass) {
+      console.log(`[Bank Nova] Password reset link for ${to}: ${resetUrl}`);
+      return {
+        success: true,
+        message: `Password reset link created for ${to}: ${resetUrl}`,
+      };
+    }
+
+    const transporter = smtpUser.includes('@gmail.com')
+      ? nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: smtpUser,
+            pass: smtpPass,
+          },
+        })
+      : nodemailer.createTransport({
+          host: smtpHost,
+          port: smtpPort,
+          secure: smtpPort === 465,
+          auth: {
+            user: smtpUser,
+            pass: smtpPass,
+          },
+        });
+
+    const displayName = recipientName ? recipientName : 'Valued Customer';
+
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <title>Bank Nova - Password Reset</title>
+      <style>
+        body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7fa; color: #1e293b; }
+        .wrapper { max-width: 580px; margin: 30px auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; }
+        .header { background: linear-gradient(135deg, #017bf5 0%, #0052cc 100%); padding: 36px 30px; text-align: center; color: #ffffff; }
+        .header h1 { margin: 0; font-size: 26px; font-weight: 800; }
+        .content { padding: 36px 32px; text-align: center; }
+        .btn { display: inline-block; background-color: #017bf5; color: #ffffff !important; padding: 14px 32px; font-size: 15px; font-weight: 700; border-radius: 12px; text-decoration: none; margin: 24px 0; }
+        .footer { background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 20px; text-align: center; font-size: 12px; color: #94a3b8; }
+      </style>
+    </head>
+    <body>
+      <div class="wrapper">
+        <div class="header">
+          <h1>Bank Nova</h1>
+          <p>Password Reset Request</p>
+        </div>
+        <div class="content">
+          <h2>Hello, ${displayName}</h2>
+          <p>We received a request to reset the password for your Bank Nova account.</p>
+          <a href="${resetUrl}" class="btn" style="color:#ffffff;">Reset My Password</a>
+          <p style="font-size: 12px; color: #64748b; margin-top: 20px;">If you did not request this reset, you can safely ignore this email.</p>
+        </div>
+        <div class="footer">
+          &copy; ${new Date().getFullYear()} Bank Nova Inc. All rights reserved.
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+
+    await transporter.sendMail({
+      from: `"Bank Nova Security" <${smtpUser}>`,
+      to: to.trim(),
+      subject: "Reset Your Bank Nova Password",
+      text: `Hello ${displayName},\n\nClick the link below to reset your password:\n${resetUrl}\n\nBank Nova Team`,
+      html: htmlContent,
+    });
+
+    return {
+      success: true,
+      message: `Password reset instructions have been sent to ${to}.`,
+    };
+  } catch (err: any) {
+    console.error("Error sending reset password email:", err);
+    return {
+      success: false,
+      error: err?.message,
+      message: "Failed to dispatch password reset email.",
     };
   }
 }

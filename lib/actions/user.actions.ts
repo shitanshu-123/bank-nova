@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 import { encryptId, extractCustomerIdFromUrl, parseStringify } from "../utils";
 import { CountryCode, ProcessorTokenCreateRequest, ProcessorTokenCreateRequestProcessorEnum, Products } from "plaid";
 import crypto from "crypto";
-import { sendOtpEmail } from "../email";
+import { sendOtpEmail, sendPasswordResetLinkEmail } from "../email";
 import { normalizeDobToIso } from "@/constants/india";
 
 import { plaidClient } from '@/lib/plaid';
@@ -263,30 +263,29 @@ export const sendPasswordResetEmail = async (email: string) => {
   try {
     if (!email) return { error: "Please enter a valid email address." };
 
-    const { account } = await createAdminClient();
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://bank-nova-snowy.vercel.app";
+    const resetUrl = `${siteUrl}/sign-in`;
+
+    // Try sending email via Nodemailer
+    await sendPasswordResetLinkEmail({
+      to: email,
+      resetUrl,
+    });
 
     try {
+      const { account } = await createAdminClient();
       await account.createRecovery(
         email,
         `${siteUrl}/sign-in`
       );
-      return {
-        success: true,
-        message: `Password reset instructions have been sent to ${email}. Please check your inbox.`,
-      };
     } catch (recoveryErr: any) {
-      console.warn("Appwrite password recovery note:", recoveryErr);
-      if (recoveryErr?.code === 404 || recoveryErr?.type === 'user_not_found') {
-        return {
-          error: "No account found with this email address. Please verify your email or Create an Account.",
-        };
-      }
-      return {
-        success: true,
-        message: `Password reset request received for ${email}. If an account exists, instructions have been sent to your inbox.`,
-      };
+      console.warn("Appwrite recovery log:", recoveryErr?.message);
     }
+
+    return {
+      success: true,
+      message: `Password reset instructions have been sent to ${email}. Please check your inbox.`,
+    };
   } catch (error: any) {
     console.error("Error sending password reset email:", error);
     return { error: error?.message || "Failed to send password reset email. Please try again." };

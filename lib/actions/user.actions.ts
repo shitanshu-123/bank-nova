@@ -5,6 +5,9 @@ import { createAdminClient, createSessionClient } from "../appwrite";
 import { cookies } from "next/headers";
 import { encryptId, extractCustomerIdFromUrl, parseStringify } from "../utils";
 import { CountryCode, ProcessorTokenCreateRequest, ProcessorTokenCreateRequestProcessorEnum, Products } from "plaid";
+import crypto from "crypto";
+import { sendOtpEmail } from "../email";
+import { normalizeDobToIso } from "@/constants/india";
 
 import { plaidClient } from '@/lib/plaid';
 import { revalidatePath } from "next/cache";
@@ -163,10 +166,14 @@ export const signUp = async ({ password, ...userData }: SignUpParams) => {
 
     if(!newUserAccount) throw new Error('Error creating user account');
 
+    // Normalize Date of Birth (supports DD-MM-YYYY, DD/MM/YYYY, YYYY-MM-DD)
+    const isoDateOfBirth = normalizeDobToIso(userData.dateOfBirth) || userData.dateOfBirth || "2000-01-01";
+
     let dwollaCustomerUrl = "";
     try {
       const res = await createDwollaCustomer({
         ...userData,
+        dateOfBirth: isoDateOfBirth,
         type: 'personal'
       });
       if (res) dwollaCustomerUrl = res;
@@ -182,6 +189,7 @@ export const signUp = async ({ password, ...userData }: SignUpParams) => {
       ID.unique(),
       {
         ...userData,
+        dateOfBirth: isoDateOfBirth,
         userId: newUserAccount.$id,
         dwollaCustomerId,
         dwollaCustomerUrl
@@ -256,7 +264,7 @@ export const sendPasswordResetEmail = async (email: string) => {
     if (!email) return { error: "Please enter a valid email address." };
 
     const { account } = await createAdminClient();
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://bank-nova.vercel.app";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://bank-nova-snowy.vercel.app";
 
     try {
       await account.createRecovery(
@@ -285,20 +293,97 @@ export const sendPasswordResetEmail = async (email: string) => {
   }
 };
 
-export const sendEmailOtpVerification = async (email: string) => {
+const OTP_SECRET = process.env.OTP_SECRET || 'banknova-otp-salt-secret-key-2026';
+
+export const sendEmailOtpVerification = async (email: string, recipientName?: string) => {
   try {
     if (!email) return { error: "Please enter a valid email address." };
 
+    // Generate real 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    const cleanEmail = email.trim().toLowerCase();
+    const otpHash = crypto
+      .createHmac('sha256', OTP_SECRET)
+      .update(`${cleanEmail}:${otp}`)
+      .digest('hex');
+
+    const tokenData = JSON.stringify({
+      email: cleanEmail,
+      otpHash,
+      expiresAt,
+    });
+
+    cookies().set('banknova-email-otp', Buffer.from(tokenData).toString('base64'), {
+      path: '/',
+      httpOnly: true,
+      sameSite: 'strict',
+      maxAge: 600,
+      secure: process.env.NODE_ENV === 'production',
+    });
+
+    // Send email to the recipient's real Gmail / email
+    const emailResult = await sendOtpEmail({
+      to: email.trim(),
+      otp,
+      recipientName,
+    });
 
     return {
       success: true,
-      otp,
-      message: `A 6-digit verification code has been sent to ${email}.`,
+      message: emailResult.success
+        ? `A 6-digit verification code has been sent to ${email}.`
+        : `Verification code generated for ${email}.`,
     };
   } catch (error: any) {
     console.error("Error sending email OTP:", error);
     return { error: error?.message || "Failed to send email verification code." };
+  }
+};
+
+export const verifyEmailOtp = async ({ email, otp }: { email: string; otp: string }) => {
+  try {
+    if (!email || !otp) {
+      return { error: "Email and verification code are required." };
+    }
+
+    const otpCookie = cookies().get('banknova-email-otp');
+    if (!otpCookie?.value) {
+      return { error: "Verification code has expired. Please request a new code." };
+    }
+
+    let parsedData: { email: string; otpHash: string; expiresAt: number };
+    try {
+      parsedData = JSON.parse(Buffer.from(otpCookie.value, 'base64').toString('utf8'));
+    } catch {
+      return { error: "Invalid verification session. Please request a new code." };
+    }
+
+    if (parsedData.email !== email.trim().toLowerCase()) {
+      return { error: "Email address mismatch. Please request a new code." };
+    }
+
+    if (Date.now() > parsedData.expiresAt) {
+      cookies().delete('banknova-email-otp');
+      return { error: "Verification code has expired. Please request a new code." };
+    }
+
+    const expectedHash = crypto
+      .createHmac('sha256', OTP_SECRET)
+      .update(`${email.trim().toLowerCase()}:${otp.trim()}`)
+      .digest('hex');
+
+    if (parsedData.otpHash !== expectedHash) {
+      return { error: "Invalid verification code. Please check your email and try again." };
+    }
+
+    // Clear verification cookie once verified
+    cookies().delete('banknova-email-otp');
+    return { success: true, message: "Email verified successfully." };
+  } catch (error: any) {
+    console.error("Error verifying OTP:", error);
+    return { error: "Failed to verify code. Please try again." };
   }
 };
 

@@ -204,15 +204,63 @@ export const getTransactionStatus = (date: Date) => {
 
 export const authFormSchema = (type: string) => z.object({
   // sign up
-  firstName: type === 'sign-in' ? z.string().optional() : z.string().min(2, "First name is required"),
-  lastName: type === 'sign-in' ? z.string().optional() : z.string().min(2, "Last name is required"),
-  address1: type === 'sign-in' ? z.string().optional() : z.string().max(80),
-  city: type === 'sign-in' ? z.string().optional() : z.string().max(50),
-  state: type === 'sign-in' ? z.string().optional() : z.string().min(2).max(30),
-  postalCode: type === 'sign-in' ? z.string().optional() : z.string().min(3).max(10),
-  dateOfBirth: type === 'sign-in' ? z.string().optional() : z.string().min(3),
-  ssn: type === 'sign-in' ? z.string().optional() : z.string().min(2).max(20),
+  firstName: type === 'sign-in' ? z.string().optional() : z.string().min(2, "First name must be at least 2 characters"),
+  lastName: type === 'sign-in' ? z.string().optional() : z.string().min(1, "Last name is required"),
+  address1: type === 'sign-in' ? z.string().optional() : z.string().min(3, "Address must be at least 3 characters").max(100),
+  city: type === 'sign-in' ? z.string().optional() : z.string().min(2, "Please enter a valid city").max(50),
+  state: type === 'sign-in' ? z.string().optional() : z.string().min(2, "Please select or enter a valid State / UT").max(50),
+  postalCode: type === 'sign-in' 
+    ? z.string().optional() 
+    : z.string().regex(/^[1-9][0-9]{5}$/, "Please enter a valid 6-digit Indian PIN code (e.g. 400001)"),
+  dateOfBirth: type === 'sign-in'
+    ? z.string().optional()
+    : z.string().refine((val) => {
+        if (!val) return false;
+        // Accept DD-MM-YYYY, DD/MM/YYYY, or YYYY-MM-DD
+        const ddmmyyyy = val.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+        const yyyymmdd = val.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+        
+        let d = 0, m = 0, y = 0;
+        if (ddmmyyyy) {
+          d = parseInt(ddmmyyyy[1], 10);
+          m = parseInt(ddmmyyyy[2], 10);
+          y = parseInt(ddmmyyyy[3], 10);
+        } else if (yyyymmdd) {
+          y = parseInt(yyyymmdd[1], 10);
+          m = parseInt(yyyymmdd[2], 10);
+          d = parseInt(yyyymmdd[3], 10);
+        } else {
+          return false;
+        }
+
+        if (m < 1 || m > 12 || d < 1 || d > 31 || y < 1920 || y > new Date().getFullYear()) {
+          return false;
+        }
+        const dateObj = new Date(y, m - 1, d);
+        return dateObj.getFullYear() === y && dateObj.getMonth() === m - 1 && dateObj.getDate() === d;
+      }, {
+        message: "Please enter a valid Date of Birth in DD-MM-YYYY format (e.g. 12-11-2005)",
+      }),
+  ssn: type === 'sign-in'
+    ? z.string().optional()
+    : z.string().refine((val) => {
+        if (!val) return false;
+        const clean = val.trim().toUpperCase();
+        // Indian PAN Card: 5 letters + 4 digits + 1 letter (e.g. ABCDE1234F)
+        const isPan = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(clean);
+        // Aadhaar: 12 digits
+        const isAadhaar = /^[2-9]{1}[0-9]{11}$/.test(clean.replace(/\s+/g, ''));
+        // SSN: 4-9 digits
+        const isSsn = /^[0-9]{4,9}$/.test(clean);
+        return isPan || isAadhaar || isSsn;
+      }, {
+        message: "Enter a valid PAN (e.g. ABCDE1234F), 12-digit Aadhaar, or SSN",
+      }),
   // both
-  email: z.string().email(),
-  password: z.string().min(8),
-})
+  email: z.string().email("Please enter a valid email address (e.g. user@gmail.com)").refine((val) => {
+    return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(val.trim());
+  }, {
+    message: "Please enter a valid email domain (e.g. name@gmail.com)",
+  }),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});

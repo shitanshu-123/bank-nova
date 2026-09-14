@@ -8,7 +8,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   MailCheck,
   ShieldCheck,
@@ -16,8 +15,8 @@ import {
   AlertCircle,
   RefreshCw,
   ArrowRight,
-  CheckCircle2,
 } from 'lucide-react';
+import { verifyEmailOtp } from '@/lib/actions/user.actions';
 
 interface EmailOtpModalProps {
   isOpen: boolean;
@@ -25,7 +24,6 @@ interface EmailOtpModalProps {
   email: string;
   onVerifySuccess: (otp: string) => void;
   onResendOtp?: () => Promise<void>;
-  generatedDemoOtp?: string;
 }
 
 export const EmailOtpModal = ({
@@ -34,7 +32,6 @@ export const EmailOtpModal = ({
   email,
   onVerifySuccess,
   onResendOtp,
-  generatedDemoOtp,
 }: EmailOtpModalProps) => {
   const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
@@ -128,9 +125,14 @@ export const EmailOtpModal = ({
     setErrorMessage('');
 
     try {
-      // Validate OTP
-      if (generatedDemoOtp && fullOtp !== generatedDemoOtp && fullOtp !== '123456') {
-        setErrorMessage('Invalid verification code. Please check your email or enter 123456.');
+      // Validate OTP via secure server action
+      const verifyRes = await verifyEmailOtp({
+        email,
+        otp: fullOtp,
+      });
+
+      if (verifyRes?.error) {
+        setErrorMessage(verifyRes.error);
         setIsLoading(false);
         return;
       }
@@ -138,7 +140,7 @@ export const EmailOtpModal = ({
       onVerifySuccess(fullOtp);
     } catch (err: any) {
       console.error('OTP verification error:', err);
-      setErrorMessage('Verification failed. Please try again.');
+      setErrorMessage('Verification failed. Please check the code or request a new one.');
       setIsLoading(false);
     }
   };
@@ -170,15 +172,6 @@ export const EmailOtpModal = ({
             <span className="font-semibold text-gray-800">{email || 'your email'}</span>
           </p>
         </DialogHeader>
-
-        {generatedDemoOtp && (
-          <div className="rounded-xl bg-blue-50 border border-blue-200/80 p-3 text-center text-12 text-blue-700">
-            <span>Demo Test OTP: </span>
-            <span className="font-mono font-bold tracking-wider text-14 bg-white px-2 py-0.5 rounded border border-blue-200">
-              {generatedDemoOtp}
-            </span>
-          </div>
-        )}
 
         <form onSubmit={handleVerify} className="space-y-5 pt-2">
           {errorMessage && (

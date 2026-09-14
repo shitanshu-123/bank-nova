@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,12 +21,12 @@ import {
   ShieldCheck,
   AlertCircle,
   ArrowRight,
-  Sparkles,
   Building,
   Hash,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { signIn, signUp, sendEmailOtpVerification } from '@/lib/actions/user.actions';
+import { INDIAN_STATES_AND_UTS } from '@/constants/india';
 import PlaidLink from './PlaidLink';
 import ForgotPasswordModal from './ForgotPasswordModal';
 import EmailOtpModal from './EmailOtpModal';
@@ -42,11 +42,10 @@ const AuthForm = ({ type }: { type: string }) => {
   // Email OTP Verification State
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [pendingUserData, setPendingUserData] = useState<any>(null);
-  const [demoOtp, setDemoOtp] = useState('');
 
   const formSchema = authFormSchema(type);
 
-  // 1. Define your form.
+  // 1. Define form
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -67,6 +66,26 @@ const AuthForm = ({ type }: { type: string }) => {
     },
   });
 
+  const selectedStateValue = form.watch('state');
+
+  // Compute dynamic city suggestions based on selected state
+  const availableCities = useMemo(() => {
+    if (!selectedStateValue) {
+      // Return top representative cities from major states
+      const allSampleCities: string[] = [];
+      INDIAN_STATES_AND_UTS.slice(0, 10).forEach((s) => {
+        allSampleCities.push(...s.cities.slice(0, 3));
+      });
+      return allSampleCities;
+    }
+    const matchedState = INDIAN_STATES_AND_UTS.find(
+      (s) =>
+        s.name.toLowerCase() === selectedStateValue.trim().toLowerCase() ||
+        s.code.toLowerCase() === selectedStateValue.trim().toLowerCase()
+    );
+    return matchedState ? matchedState.cities : [];
+  }, [selectedStateValue]);
+
   // Handle successful OTP verification to finalize sign up
   const handleOtpVerified = async () => {
     if (!pendingUserData) return;
@@ -85,7 +104,7 @@ const AuthForm = ({ type }: { type: string }) => {
       }
     } catch (err: any) {
       console.error(err);
-      setErrorMessage('Account creation failed after verification. Please try again.');
+      setErrorMessage('Account creation failed. Please try again.');
       setShowOtpModal(false);
     } finally {
       setIsLoading(false);
@@ -95,15 +114,13 @@ const AuthForm = ({ type }: { type: string }) => {
   // Handle resending OTP code
   const handleResendOtp = async () => {
     const targetEmail = pendingUserData?.email || form.getValues('email');
+    const targetName = pendingUserData?.firstName || form.getValues('firstName');
     if (targetEmail) {
-      const res = await sendEmailOtpVerification(targetEmail);
-      if (res?.otp) {
-        setDemoOtp(res.otp);
-      }
+      await sendEmailOtpVerification(targetEmail, targetName);
     }
   };
 
-  // 2. Define a submit handler.
+  // 2. Submit handler
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     setErrorMessage('');
@@ -111,24 +128,26 @@ const AuthForm = ({ type }: { type: string }) => {
     try {
       if (type === 'sign-up') {
         const userData = {
-          firstName: data.firstName!,
-          lastName: data.lastName!,
-          address1: data.address1!,
-          city: data.city!,
-          state: data.state!,
-          postalCode: data.postalCode!,
-          dateOfBirth: data.dateOfBirth!,
-          ssn: data.ssn!,
-          email: data.email,
+          firstName: data.firstName!.trim(),
+          lastName: data.lastName!.trim(),
+          address1: data.address1!.trim(),
+          city: data.city!.trim(),
+          state: data.state!.trim(),
+          postalCode: data.postalCode!.trim(),
+          dateOfBirth: data.dateOfBirth!.trim(),
+          ssn: data.ssn!.trim().toUpperCase(),
+          email: data.email.trim().toLowerCase(),
           password: data.password,
         };
 
         setPendingUserData(userData);
 
-        // Send Email OTP
-        const otpRes = await sendEmailOtpVerification(data.email);
-        if (otpRes?.otp) {
-          setDemoOtp(otpRes.otp);
+        // Send Email OTP directly to their Gmail
+        const otpRes = await sendEmailOtpVerification(userData.email, userData.firstName);
+        if (otpRes?.error) {
+          setErrorMessage(otpRes.error);
+          setIsLoading(false);
+          return;
         }
 
         setShowOtpModal(true);
@@ -138,7 +157,7 @@ const AuthForm = ({ type }: { type: string }) => {
 
       if (type === 'sign-in') {
         const response = await signIn({
-          email: data.email,
+          email: data.email.trim().toLowerCase(),
           password: data.password,
         });
 
@@ -243,9 +262,26 @@ const AuthForm = ({ type }: { type: string }) => {
       ) : (
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            {/* Datalists for Indian States & Cities */}
+            <datalist id="indian-states-list">
+              {INDIAN_STATES_AND_UTS.map((st) => (
+                <option key={st.code} value={st.name}>
+                  {st.name} ({st.code}) - {st.type}
+                </option>
+              ))}
+            </datalist>
+
+            <datalist id="indian-cities-list">
+              {availableCities.map((ct) => (
+                <option key={ct} value={ct}>
+                  {ct}
+                </option>
+              ))}
+            </datalist>
+
             {/* Error Notification Banner */}
             {errorMessage && (
-              <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50/90 p-4 text-red-700 shadow-sm animate-in fade-in slide-in-from-top-1">
+              <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50/90 p-4 text-red-700 shadow-sm animate-in fade-in slide-from-top-1">
                 <AlertCircle className="mt-0.5 size-5 shrink-0 text-red-500" />
                 <div className="flex-1 text-13 font-medium leading-5">
                   {errorMessage}
@@ -299,19 +335,21 @@ const AuthForm = ({ type }: { type: string }) => {
                   <div className="sm:col-span-1">
                     <CustomInput
                       control={form.control}
-                      name="city"
-                      label="City"
-                      placeholder="e.g. Mumbai"
-                      icon={Building}
+                      name="state"
+                      label="State"
+                      placeholder="e.g. Maharashtra"
+                      icon={MapPin}
+                      list="indian-states-list"
                     />
                   </div>
                   <div className="sm:col-span-1">
                     <CustomInput
                       control={form.control}
-                      name="state"
-                      label="State"
-                      placeholder="e.g. Maharashtra"
-                      icon={MapPin}
+                      name="city"
+                      label="City"
+                      placeholder="e.g. Mumbai"
+                      icon={Building}
+                      list="indian-cities-list"
                     />
                   </div>
                   <div className="sm:col-span-1">
@@ -321,6 +359,8 @@ const AuthForm = ({ type }: { type: string }) => {
                       label="PIN / ZIP Code"
                       placeholder="e.g. 400001"
                       icon={Hash}
+                      maxLength={6}
+                      inputMode="numeric"
                     />
                   </div>
                 </div>
@@ -337,8 +377,9 @@ const AuthForm = ({ type }: { type: string }) => {
                     control={form.control}
                     name="dateOfBirth"
                     label="Date of Birth"
-                    placeholder="YYYY-MM-DD"
+                    placeholder="DD-MM-YYYY (e.g. 12-11-2005)"
                     icon={Calendar}
+                    maxLength={10}
                   />
                   <CustomInput
                     control={form.control}
@@ -346,6 +387,8 @@ const AuthForm = ({ type }: { type: string }) => {
                     label="PAN / Aadhaar / SSN"
                     placeholder="e.g. ABCDE1234F"
                     icon={Hash}
+                    uppercase={true}
+                    maxLength={14}
                   />
                 </div>
               </div>
@@ -359,6 +402,7 @@ const AuthForm = ({ type }: { type: string }) => {
                 label="Email Address"
                 placeholder="name@example.com"
                 icon={Mail}
+                inputMode="email"
               />
 
               <CustomInput
@@ -456,7 +500,6 @@ const AuthForm = ({ type }: { type: string }) => {
         email={pendingUserData?.email || form.getValues('email')}
         onVerifySuccess={handleOtpVerified}
         onResendOtp={handleResendOtp}
-        generatedDemoOtp={demoOtp}
       />
     </section>
   );

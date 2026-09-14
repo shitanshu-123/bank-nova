@@ -18,6 +18,11 @@ interface CustomInputProps {
   icon?: LucideIcon;
   type?: string;
   disabled?: boolean;
+  list?: string;
+  maxLength?: number;
+  inputMode?: 'text' | 'numeric' | 'email' | 'tel' | 'url' | 'search';
+  uppercase?: boolean;
+  onChangeExtra?: (value: string) => void;
 }
 
 const CustomInput = ({
@@ -28,6 +33,11 @@ const CustomInput = ({
   icon: Icon,
   type,
   disabled = false,
+  list,
+  maxLength,
+  inputMode,
+  uppercase = false,
+  onChangeExtra,
 }: CustomInputProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const isPassword = name === 'password' || type === 'password';
@@ -51,11 +61,27 @@ const CustomInput = ({
               <Input
                 placeholder={placeholder}
                 disabled={disabled}
+                list={list}
+                maxLength={maxLength}
+                inputMode={inputMode}
                 className={`auth-input-modern ${Icon ? 'pl-10' : 'pl-3.5'} ${
                   isPassword ? 'pr-11' : 'pr-3.5'
-                } ${fieldState.error ? 'border-red-400 focus:ring-red-200' : ''}`}
+                } ${uppercase ? 'uppercase' : ''} ${
+                  fieldState.error ? 'border-red-400 focus:ring-red-200' : ''
+                }`}
                 type={isPassword ? (showPassword ? 'text' : 'password') : type || 'text'}
                 {...field}
+                value={field.value || ''}
+                onChange={(e) => {
+                  let val = e.target.value;
+                  if (uppercase) {
+                    val = val.toUpperCase();
+                  }
+                  field.onChange(val);
+                  if (onChangeExtra) {
+                    onChangeExtra(val);
+                  }
+                }}
               />
             </FormControl>
             {isPassword && (

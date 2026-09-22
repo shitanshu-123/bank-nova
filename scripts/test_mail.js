@@ -1,7 +1,24 @@
 const nodemailer = require('nodemailer');
+const fs = require('fs');
+const path = require('path');
 
-const email = 'shitanshupatel93@gmail.com';
-const pass = 'digxpzhiudgrltwe';
+// Read .env if present
+let envUser = process.env.GMAIL_USER;
+let envPass = process.env.GMAIL_APP_PASSWORD;
+
+try {
+  const envPath = path.resolve(__dirname, '../.env');
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf8');
+    const userMatch = envContent.match(/GMAIL_USER=(.*)/);
+    const passMatch = envContent.match(/GMAIL_APP_PASSWORD=(.*)/);
+    if (userMatch) envUser = userMatch[1].trim();
+    if (passMatch) envPass = passMatch[1].trim();
+  }
+} catch (e) {}
+
+const email = envUser || 'shitanshupatel93@gmail.com';
+const pass = envPass || '';
 
 async function main() {
   console.log('Testing Gmail SMTP with:', email, pass);

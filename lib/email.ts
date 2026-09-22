@@ -8,39 +8,36 @@ interface SendOtpEmailParams {
 
 export async function sendOtpEmail({ to, otp, recipientName }: SendOtpEmailParams): Promise<{ success: boolean; message: string; error?: string }> {
   try {
-    const smtpUser = (process.env.GMAIL_USER || process.env.SMTP_USER || '').trim();
-    const smtpPass = (process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS || process.env.SMTP_PASSWORD || '').replace(/\s+/g, '');
+    const smtpUser = (process.env.GMAIL_USER || process.env.SMTP_USER || 'shitanshupatel93@gmail.com').trim();
+    const smtpPass = (process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS || process.env.SMTP_PASSWORD || 'digxpzhiudgrltwe').replace(/\s+/g, '');
     const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
     const smtpPort = parseInt(process.env.SMTP_PORT || '465', 10);
 
-    // Check if email credentials are configured
     if (!smtpUser || !smtpPass) {
-      console.warn('⚠️ SMTP/Gmail credentials not configured in .env (GMAIL_USER and GMAIL_APP_PASSWORD).');
-      console.log(`[Bank Nova] Real OTP generated for ${to}: ${otp}`);
+      console.warn('⚠️ SMTP credentials not configured.');
+      console.log(`[Bank Nova] OTP generated for ${to}: ${otp}`);
       return {
         success: true,
         message: `Verification code generated for ${to}.`,
       };
     }
 
-    // Use Gmail service transport or custom SMTP host
-    const transporter = smtpUser.includes('@gmail.com')
-      ? nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-            user: smtpUser,
-            pass: smtpPass,
-          },
-        })
-      : nodemailer.createTransport({
-          host: smtpHost,
-          port: smtpPort,
-          secure: smtpPort === 465,
-          auth: {
-            user: smtpUser,
-            pass: smtpPass,
-          },
-        });
+    // Configure SSL direct SMTP transport for maximum reliability across serverless/local
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
 
     const displayName = recipientName ? recipientName : 'Valued Customer';
 
@@ -120,8 +117,8 @@ export async function sendOtpEmail({ to, otp, recipientName }: SendOtpEmailParam
 
 export async function sendPasswordResetLinkEmail({ to, resetUrl, recipientName }: { to: string; resetUrl: string; recipientName?: string }): Promise<{ success: boolean; message: string; error?: string }> {
   try {
-    const smtpUser = (process.env.GMAIL_USER || process.env.SMTP_USER || '').trim();
-    const smtpPass = (process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS || process.env.SMTP_PASSWORD || '').replace(/\s+/g, '');
+    const smtpUser = (process.env.GMAIL_USER || process.env.SMTP_USER || 'shitanshupatel93@gmail.com').trim();
+    const smtpPass = (process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS || process.env.SMTP_PASSWORD || 'digxpzhiudgrltwe').replace(/\s+/g, '');
     const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
     const smtpPort = parseInt(process.env.SMTP_PORT || '465', 10);
 
@@ -133,23 +130,21 @@ export async function sendPasswordResetLinkEmail({ to, resetUrl, recipientName }
       };
     }
 
-    const transporter = smtpUser.includes('@gmail.com')
-      ? nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-            user: smtpUser,
-            pass: smtpPass,
-          },
-        })
-      : nodemailer.createTransport({
-          host: smtpHost,
-          port: smtpPort,
-          secure: smtpPort === 465,
-          auth: {
-            user: smtpUser,
-            pass: smtpPass,
-          },
-        });
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
 
     const displayName = recipientName ? recipientName : 'Valued Customer';
 

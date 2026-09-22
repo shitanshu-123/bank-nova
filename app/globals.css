@@ -24,23 +24,84 @@
   -webkit-backdrop-filter: blur(4px);
 }
 
+.bn-serif {
+  font-family: var(--font-fraunces), serif;
+}
+
+.bn-fade-up {
+  opacity: 0;
+  animation: bnFadeUp 0.65s cubic-bezier(.22,.61,.36,1) forwards;
+}
+
+@keyframes bnFadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.bn-nav-btn {
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.bn-action {
+  transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+}
+
+.bn-action:hover {
+  background-color: rgba(184, 134, 59, 0.08);
+}
+
+.bn-btn-gold {
+  background: #B8863B;
+  color: #0E2A21;
+  transition: filter 0.15s ease, transform 0.1s ease;
+  cursor: pointer;
+}
+
+.bn-btn-gold:hover {
+  filter: brightness(1.08);
+}
+
+.bn-btn-gold:active {
+  transform: scale(0.98);
+}
+
+.bn-pulse {
+  animation: bnPulse 1.4s ease;
+}
+
+@keyframes bnPulse {
+  0% { box-shadow: 0 0 0 0 rgba(184, 134, 59, 0.45); }
+  70% { box-shadow: 0 0 0 14px rgba(184, 134, 59, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(184, 134, 59, 0); }
+}
+
+.bn-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.bn-scroll::-webkit-scrollbar-thumb {
+  background: #D9D4C2;
+  border-radius: 4px;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
-  width: 3px;
-  height: 3px;
+  width: 4px;
+  height: 4px;
   border-radius: 2px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #dddddd;
+  background: #E4D3AE;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #5c5c7b;
+  background: #B8863B;
   border-radius: 50px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #7878a3;
+  background: #0E2A21;
 }
 
 @layer utilities {

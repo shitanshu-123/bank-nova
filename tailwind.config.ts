@@ -20,10 +20,21 @@ const config = {
     },
     extend: {
       colors: {
+        ink: "#0E2A21",
+        ink2: "#163C2F",
+        inkSoft: "#2A4A3D",
+        paper: "#F2F1E7",
+        paperRaised: "#FBFAF4",
+        gold: "#B8863B",
+        goldSoft: "#E4D3AE",
+        line: "#D9D4C2",
+        textMuted: "#6B7268",
+        textOnInk: "#EFEEE3",
+        textOnInkMuted: "#9AAA9F",
         fill: {
           1: "rgba(255, 255, 255, 0.10)",
         },
-        bankGradient: "#0179FE",
+        bankGradient: "#B8863B",
         indigo: {
           500: "#6172F3",
           700: "#3538CD",
@@ -56,24 +67,24 @@ const config = {
           1: "#F3F9FF",
         },
         black: {
-          1: "#00214F",
-          2: "#344054",
+          1: "#0E2A21",
+          2: "#1B2420",
         },
         gray: {
-          25: "#FCFCFD",
-          200: "#EAECF0",
-          300: "#D0D5DD",
-          500: "#667085",
+          25: "#FBFAF4",
+          200: "#D9D4C2",
+          300: "#C8C2AF",
+          500: "#6B7268",
           600: "#475467",
-          700: "#344054",
-          900: "#101828",
+          700: "#2A3831",
+          900: "#1B2420",
         },
       },
       backgroundImage: {
-        "bank-gradient": "linear-gradient(90deg, #0179FE 0%, #4893FF 100%)",
+        "bank-gradient": "linear-gradient(90deg, #0E2A21 0%, #163C2F 100%)",
         "gradient-mesh": "url('/icons/gradient-mesh.svg')",
         "bank-green-gradient":
-          "linear-gradient(90deg, #01797A 0%, #489399 100%)",
+          "linear-gradient(90deg, #0E2A21 0%, #B8863B 100%)",
       },
       boxShadow: {
         form: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
@@ -84,8 +95,11 @@ const config = {
         creditCard: "8px 10px 16px 0px rgba(0, 0, 0, 0.05)",
       },
       fontFamily: {
+        sans: ["var(--font-ibm-plex-sans)", "var(--font-inter)", "sans-serif"],
         inter: "var(--font-inter)",
         "ibm-plex-serif": "var(--font-ibm-plex-serif)",
+        fraunces: ["var(--font-fraunces)", "serif"],
+        "ibm-plex-sans": ["var(--font-ibm-plex-sans)", "sans-serif"],
       },
       keyframes: {
         "accordion-down": {

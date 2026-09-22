@@ -12,19 +12,27 @@ export default async function RootLayout({
 }>) {
   const loggedIn = await getLoggedInUser();
 
-  if(!loggedIn) redirect('/sign-in')
+  if(!loggedIn) redirect('/sign-in');
 
   return (
-    <main className="flex h-screen w-full font-inter">
+    <main className="flex h-screen w-full bg-paper text-text font-sans antialiased overflow-hidden">
       <Sidebar user={loggedIn} />
 
-      <div className="flex size-full flex-col overflow-y-auto">
-        <div className="root-layout">
-          <Image src="/icons/logo.svg" width={30} height={30} alt="logo" />
+      <div className="flex size-full flex-col overflow-y-auto bn-scroll bg-paper">
+        <div className="flex md:hidden items-center justify-between w-full px-5 py-3.5 bg-ink text-textOnInk border-b border-white/10 shadow-sm sticky top-0 z-30">
+          <div className="flex items-center gap-2.5">
+            <div className="flex items-center justify-center bn-serif size-7 rounded-full bg-gold text-ink font-semibold text-13">
+              N
+            </div>
+            <span className="bn-serif text-16 font-medium tracking-wide text-textOnInk">
+              Bank Nova
+            </span>
+          </div>
           <div>
             <MobileNav user={loggedIn} />
           </div>
         </div>
+
         <div className="flex-1">
           {children}
         </div>

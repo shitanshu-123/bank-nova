@@ -3,105 +3,91 @@
 import React from 'react';
 import Link from 'next/link';
 import {
-  Zap,
   QrCode,
-  ArrowUpRight,
-  ArrowDownLeft,
-  Building2,
-  Sparkles,
   Smartphone,
+  Building2,
   ShieldCheck,
+  BadgeCheck,
 } from 'lucide-react';
+
+function GoogleMark(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 48 48" width="20" height="20" {...props}>
+      <path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.1-.4-4.6H24v9h11.8c-.5 2.8-2.1 5.2-4.4 6.8v5.6h7.1c4.2-3.9 6.6-9.6 6.6-16.8z"/>
+      <path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.3l-7.1-5.6c-2 1.3-4.5 2.1-7.4 2.1-5.7 0-10.5-3.8-12.2-9H4.5v5.7C8.1 41 15.4 46 24 46z"/>
+      <path fill="#FBBC05" d="M11.8 28.2c-.4-1.3-.7-2.7-.7-4.2s.2-2.9.7-4.2v-5.7H4.5C3 17.1 2 20.4 2 24s1 6.9 2.5 9.9l7.3-5.7z"/>
+      <path fill="#EA4335" d="M24 10.7c3.2 0 6.1 1.1 8.3 3.3l6.3-6.3C34.9 4.2 29.9 2 24 2 15.4 2 8.1 7 4.5 14.1l7.3 5.7c1.7-5.2 6.5-9.1 12.2-9.1z"/>
+    </svg>
+  );
+}
+
+const QUICK_ACTIONS = [
+  { id: 'gpay', label: 'Google Pay', sub: 'Instant UPI transfer', icon: GoogleMark, href: '/payment-transfer' },
+  { id: 'scan', label: 'Scan & Pay', sub: 'Scan any QR code', icon: QrCode, href: '/payment-transfer' },
+  { id: 'mobile', label: 'Mobile Pay', sub: 'Send to a phone number', icon: Smartphone, href: '/payment-transfer' },
+  { id: 'wire', label: 'Bank Wire', sub: 'ACH & Plaid transfer', icon: Building2, href: '/payment-transfer' },
+];
 
 export const DashboardQuickActions = () => {
   return (
-    <div className="w-full rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="flex size-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-            <Zap size={16} />
-          </div>
-          <h3 className="text-14 font-bold text-gray-900">Quick Actions</h3>
-        </div>
-        <div className="flex items-center gap-1 text-11 font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-          <ShieldCheck size={12} />
-          <span>NPCI 256-Bit</span>
-        </div>
+    <div className="w-full space-y-4">
+      {/* Title */}
+      <div>
+        <h2 className="bn-serif text-[19px] font-medium text-text m-0">
+          Move money
+        </h2>
+        <p className="text-[13px] text-textMuted mt-1">
+          Send and receive in seconds.
+        </p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {/* Quick Action 1: Google Pay Instant */}
-        <Link
-          href="/payment-transfer"
-          className="flex flex-col items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gradient-to-b from-gray-50 to-white p-3.5 text-center shadow-sm transition-all duration-200 hover:border-blue-500 hover:shadow-md hover:scale-[1.02] group"
-        >
-          <div className="flex size-10 items-center justify-center rounded-xl bg-white shadow-sm border border-gray-200 p-1.5 group-hover:bg-blue-50 transition-colors">
-            <svg className="size-6" viewBox="0 0 24 24">
-              <path
-                fill="#4285F4"
-                d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
-              />
-              <path
-                fill="#34A853"
-                d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
-              />
-              <path
-                fill="#EA4335"
-                d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
-              />
-            </svg>
-          </div>
-          <div>
-            <p className="text-13 font-bold text-gray-900">Google Pay</p>
-            <p className="text-11 text-gray-500">Instant UPI VPA</p>
-          </div>
-        </Link>
+      {/* Grid container */}
+      <div
+        className="grid grid-cols-2 md:grid-cols-4 rounded-[10px] border border-line bg-paperRaised overflow-hidden shadow-sm"
+      >
+        {QUICK_ACTIONS.map((a, i) => {
+          const Icon = a.icon;
+          const isRightBorder = i % 2 === 0 || (i < 3 && i % 4 !== 3);
 
-        {/* Quick Action 2: Scan & Pay QR */}
-        <Link
-          href="/payment-transfer"
-          className="flex flex-col items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gradient-to-b from-gray-50 to-white p-3.5 text-center shadow-sm transition-all duration-200 hover:border-blue-500 hover:shadow-md hover:scale-[1.02] group"
-        >
-          <div className="flex size-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 shadow-sm border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-            <QrCode size={20} />
-          </div>
-          <div>
-            <p className="text-13 font-bold text-gray-900">Scan & Pay</p>
-            <p className="text-11 text-gray-500">Dynamic QR Code</p>
-          </div>
-        </Link>
+          return (
+            <Link
+              key={a.id}
+              href={a.href}
+              className="bn-action flex flex-col gap-2.5 p-5 md:p-6 transition-colors border-b md:border-b-0 border-line border-r last:border-r-0"
+              style={{
+                textDecoration: 'none',
+              }}
+            >
+              <div className="flex size-9 items-center justify-center rounded-lg bg-paper border border-line/60">
+                {a.id === 'gpay' ? (
+                  <GoogleMark />
+                ) : (
+                  <Icon size={19} color="#0E2A21" strokeWidth={1.8} />
+                )}
+              </div>
+              <div>
+                <div className="text-[14px] font-medium text-text">
+                  {a.label}
+                </div>
+                <div className="text-[12px] text-textMuted mt-0.5">
+                  {a.sub}
+                </div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
 
-        {/* Quick Action 3: Mobile Transfer */}
-        <Link
-          href="/payment-transfer"
-          className="flex flex-col items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gradient-to-b from-gray-50 to-white p-3.5 text-center shadow-sm transition-all duration-200 hover:border-blue-500 hover:shadow-md hover:scale-[1.02] group"
-        >
-          <div className="flex size-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 shadow-sm border border-emerald-100 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-            <Smartphone size={20} />
-          </div>
-          <div>
-            <p className="text-13 font-bold text-gray-900">Mobile Pay</p>
-            <p className="text-11 text-gray-500">Phone to Phone</p>
-          </div>
-        </Link>
-
-        {/* Quick Action 4: Bank Wire */}
-        <Link
-          href="/payment-transfer"
-          className="flex flex-col items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gradient-to-b from-gray-50 to-white p-3.5 text-center shadow-sm transition-all duration-200 hover:border-blue-500 hover:shadow-md hover:scale-[1.02] group"
-        >
-          <div className="flex size-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600 shadow-sm border border-purple-100 group-hover:bg-purple-600 group-hover:text-white transition-colors">
-            <Building2 size={20} />
-          </div>
-          <div>
-            <p className="text-13 font-bold text-gray-900">Bank Wire</p>
-            <p className="text-11 text-gray-500">ACH & Plaid Transfer</p>
-          </div>
-        </Link>
+      {/* Trust strip */}
+      <div className="flex items-center gap-5 flex-wrap pt-1 text-[12.5px] text-textMuted">
+        <span className="flex items-center gap-1.5 font-medium">
+          <ShieldCheck size={14} color="#B8863B" />
+          <span>256-bit encryption, NPCI-compliant</span>
+        </span>
+        <span className="flex items-center gap-1.5 font-medium">
+          <BadgeCheck size={14} color="#B8863B" />
+          <span>UPI certified</span>
+        </span>
       </div>
     </div>
   );

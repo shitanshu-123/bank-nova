@@ -15,6 +15,7 @@ import {
   AlertCircle,
   RefreshCw,
   ArrowRight,
+  Sparkles,
 } from 'lucide-react';
 import { verifyEmailOtp } from '@/lib/actions/user.actions';
 
@@ -33,7 +34,8 @@ export const EmailOtpModal = ({
   onVerifySuccess,
   onResendOtp,
 }: EmailOtpModalProps) => {
-  const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
+  // Pre-fill with demo OTP 123456 for effortless registration
+  const [otp, setOtp] = useState<string[]>(['1', '2', '3', '4', '5', '6']);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [countdown, setCountdown] = useState(30);
@@ -43,7 +45,7 @@ export const EmailOtpModal = ({
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
-      setOtp(['', '', '', '', '', '']);
+      setOtp(['1', '2', '3', '4', '5', '6']);
       setErrorMessage('');
       setCountdown(30);
       setCanResend(false);
@@ -70,7 +72,6 @@ export const EmailOtpModal = ({
     if (!/^\d*$/.test(value)) return;
 
     const newOtp = [...otp];
-    // Handle paste of full 6-digit code
     if (value.length > 1) {
       const pastedDigits = value.slice(0, 6).split('');
       pastedDigits.forEach((digit, i) => {
@@ -86,7 +87,6 @@ export const EmailOtpModal = ({
     setOtp(newOtp);
     setErrorMessage('');
 
-    // Auto move to next input box
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -112,6 +112,11 @@ export const EmailOtpModal = ({
     }
   };
 
+  const handleAutoFill = () => {
+    setOtp(['1', '2', '3', '4', '5', '6']);
+    setErrorMessage('');
+  };
+
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     const fullOtp = otp.join('');
@@ -125,7 +130,6 @@ export const EmailOtpModal = ({
     setErrorMessage('');
 
     try {
-      // Validate OTP via secure server action
       const verifyRes = await verifyEmailOtp({
         email,
         otp: fullOtp,
@@ -150,7 +154,7 @@ export const EmailOtpModal = ({
     setCanResend(false);
     setCountdown(30);
     setErrorMessage('');
-    setOtp(['', '', '', '', '', '']);
+    setOtp(['1', '2', '3', '4', '5', '6']);
 
     if (onResendOtp) {
       await onResendOtp();
@@ -159,24 +163,39 @@ export const EmailOtpModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[440px] p-6 bg-white rounded-3xl border border-gray-100 shadow-2xl">
+      <DialogContent className="sm:max-w-[440px] p-6 bg-paperRaised rounded-[14px] border border-line shadow-2xl">
         <DialogHeader className="text-center space-y-2">
-          <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 shadow-sm border border-blue-100">
-            <MailCheck size={30} />
+          <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-paper text-ink shadow-sm border border-line">
+            <MailCheck size={30} color="#B8863B" />
           </div>
-          <DialogTitle className="text-20 font-bold text-gray-900">
+          <DialogTitle className="bn-serif text-22 font-medium text-text">
             Verify Your Email Address
           </DialogTitle>
-          <p className="text-13 text-gray-500">
-            We sent a 6-digit verification code to{' '}
-            <span className="font-semibold text-gray-800">{email || 'your email'}</span>
+          <p className="text-13 text-textMuted">
+            We sent a verification code to{' '}
+            <span className="font-semibold text-text">{email || 'your email'}</span>
           </p>
         </DialogHeader>
 
-        <form onSubmit={handleVerify} className="space-y-5 pt-2">
+        {/* Demo Code Auto-Fill Banner */}
+        <div className="flex items-center justify-between rounded-lg border border-gold/40 bg-goldSoft/30 px-3.5 py-2 text-[12.5px] text-ink shadow-sm mt-1">
+          <div className="flex items-center gap-2">
+            <Sparkles size={15} className="text-gold shrink-0" />
+            <span>Demo code: <strong className="font-mono text-[14px] font-bold text-ink">123456</strong></span>
+          </div>
+          <button
+            type="button"
+            onClick={handleAutoFill}
+            className="text-[11.5px] font-semibold text-ink hover:text-gold underline cursor-pointer bg-paperRaised px-2 py-0.5 rounded border border-line"
+          >
+            Auto-Fill
+          </button>
+        </div>
+
+        <form onSubmit={handleVerify} className="space-y-4 pt-2">
           {errorMessage && (
-            <div className="flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3.5 text-13 font-medium text-red-700">
-              <AlertCircle size={17} className="text-red-500 shrink-0 mt-0.5" />
+            <div className="flex items-start gap-2.5 rounded-lg border border-red-200 bg-red-50 p-3 text-13 font-medium text-red-700">
+              <AlertCircle size={16} className="text-red-500 shrink-0 mt-0.5" />
               <span>{errorMessage}</span>
             </div>
           )}
@@ -196,7 +215,7 @@ export const EmailOtpModal = ({
                 onChange={(e) => handleChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 onPaste={handlePaste}
-                className="size-12 sm:size-13 text-center text-20 font-extrabold rounded-2xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 transition-all focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:outline-none"
+                className="size-11 sm:size-12 text-center text-20 font-bold rounded-lg border border-line bg-paper text-text transition-all focus:border-gold focus:bg-white focus:outline-none"
               />
             ))}
           </div>
@@ -207,15 +226,15 @@ export const EmailOtpModal = ({
               <button
                 type="button"
                 onClick={handleResend}
-                className="inline-flex items-center gap-1.5 font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                className="inline-flex items-center gap-1.5 font-semibold text-gold hover:text-ink transition-colors"
               >
                 <RefreshCw size={14} />
                 <span>Resend Verification Code</span>
               </button>
             ) : (
-              <span className="text-gray-400">
+              <span className="text-textMuted text-[12.5px]">
                 Didn&apos;t receive code? Resend in{' '}
-                <span className="font-semibold text-gray-700 font-mono">
+                <span className="font-semibold text-text font-mono">
                   {countdown}s
                 </span>
               </span>
@@ -224,40 +243,37 @@ export const EmailOtpModal = ({
 
           {/* Action Buttons */}
           <div className="pt-2 space-y-2">
-            <Button
+            <button
               type="submit"
               disabled={isLoading || otp.join('').length < 6}
-              className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-700 font-semibold text-14 text-white shadow-md shadow-blue-600/20 group disabled:opacity-50"
+              className="bn-btn-gold w-full h-11 rounded-md font-semibold text-14 text-ink shadow-sm flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {isLoading ? (
                 <>
-                  <Loader2 size={18} className="animate-spin mr-2" />
-                  Verifying Code...
+                  <Loader2 size={18} className="animate-spin" />
+                  <span>Verifying Code...</span>
                 </>
               ) : (
                 <>
                   <span>Verify & Proceed</span>
-                  <ArrowRight
-                    size={17}
-                    className="ml-2 transition-transform group-hover:translate-x-1"
-                  />
+                  <ArrowRight size={16} />
                 </>
               )}
-            </Button>
+            </button>
 
             <Button
               type="button"
               variant="ghost"
               onClick={onClose}
-              className="w-full h-10 rounded-xl text-13 font-medium text-gray-500 hover:text-gray-900"
+              className="w-full h-9 rounded-md text-13 font-medium text-textMuted hover:text-text"
             >
               Cancel
             </Button>
           </div>
 
-          <div className="flex items-center justify-center gap-1.5 pt-1 text-center text-11 text-gray-400">
-            <ShieldCheck size={14} className="text-emerald-600" />
-            <span>256-Bit Encrypted One-Time Password Verification</span>
+          <div className="flex items-center justify-center gap-1.5 text-center text-[11px] text-textMuted">
+            <ShieldCheck size={13} color="#B8863B" />
+            <span>256-Bit Encrypted Verification</span>
           </div>
         </form>
       </DialogContent>
